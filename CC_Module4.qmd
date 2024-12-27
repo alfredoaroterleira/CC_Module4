@@ -1,0 +1,291 @@
+---
+title: "CC_Module4"
+author: "Alfredo Aro Terleira"
+format: 
+  html: 
+    self-contained: true
+editor: visual
+---
+
+## Creating Maps in R
+
+### Paso 1: Paquetes
+
+```{r}
+library(leaflet)
+library(magrittr)
+```
+
+### Examples using Leaflet
+
+1.  Eiffel Tower - Paris, France
+
+```{r}
+#We use 'leaflet' function, which returns an object that represents an empty world map
+map <- leaflet()
+map
+```
+
+```{r}
+#We call the 'addTiles' function to publish a tile layer on the map
+map <- leaflet() %>% addTiles()
+map
+```
+
+```{r}
+#We can also display a specific location with a marker, like we've done with Times Square -> for this we need to use 'addMarkers' function
+
+map <- leaflet() %>% addTiles() %>%
+  addMarkers(lng = -73.9851, lat = 40.7589)
+
+map
+```
+
+```{r}
+#To add a caption to a specific location, you can use the 'popip' argument
+
+map <- leaflet() %>% addTiles() %>%
+  addMarkers(lng = -73.9851, lat = 40.7589,
+             popup = 'Times Square')
+
+map
+```
+
+```{r}
+# We can create maps with different styles, like the water color style. We need to use 'addProviderTiles' function
+
+#No corre, no sé por qué
+
+map <- leaflet() %>% addProviderTiles("Stamen.Watercolor") %>%
+  addMarkers(lng = 2.2945, lat = 48.8584,
+             popup = "Eiffel Tower")
+
+map
+```
+
+## Creating Maps from a Data Frame
+
+### Paso 1: Nuestra base de datos
+
+```{r}
+head(quakes)
+```
+
+### Paso 2: Adding Multiple Markers
+
+```{r}
+map <- leaflet(quakes) %>% addTiles() %>%
+  addCircleMarkers(lng = quakes$long, lat = quakes$lat)
+
+map
+```
+
+### Paso 3: Clustering Markers
+
+```{r}
+library(htmlwidgets)
+library(IRdisplay)
+
+map7 <- leaflet(quakes) %>% addTiles() %>%
+  addMarkers(clusterOptions = markerClusterOptions())
+saveWidget(map7, file="map7.html", selfcontained = F)
+display_html(paste("<iframe src=' ", 'map7.html', " ' width='100%' height='300' ", "/>"))
+```
+
+### Paso 4: Adding Rectangles
+
+```{r}
+map9 <- leaflet() %>% addTiles () %>%
+  addMarkers(lng = 86.92, lat = 27.99,
+             popup = "Mount Everest") %>%
+  addRectangles(86.9, 27.95, 87, 28.06)
+
+saveWidget(map9, file="map9.html", selfcontained = F)
+display_html(paste("<iframe src= ' ", 'map9.html', " 'width='100%' height='300'", "/>"))
+```
+
+## LAB
+
+**Descargamos files**
+
+```{r}
+download.file("https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-DV0103EN-SkillsNetwork/labs/module%201/countries.txt",
+              destfile = "C:/Users/USUARIO/Documents/GitHub/CC_Module4/countries.txt", quiet = TRUE)
+download.file("https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-DV0103EN-SkillsNetwork/labs/module%201/energy.csv",
+              destfile = "C:/Users/USUARIO/Documents/GitHub/CC_Module4/energy.csv", quiet = TRUE)
+```
+
+### Adding base map
+
+Even after setting the first view, the map will still be empty, since we have not added a base yet. The most common way to do it is by calling the addTiles(map) function, which uses the OpenStreetMap by default.
+
+```{r}
+map1 <- leaflet() %>% fitBounds(86.8, 27.9, 87, 28) %>% addTiles()
+saveWidget(map1, file="map1.html", selfcontained = F)
+display_html(paste("<iframe src=' ", 'map1.html', " ' width='100%' height='300'","/>"))
+```
+
+You can also use third-party tiles by calling addProviderTiles(map, tile) (you can find some tiles here <http://leaflet-extras.github.io/leaflet-providers/preview/index.html>).\
+It is also possible to combine multiple tiles by exploring the opacity parameter of those functions, so feel free to play with it.
+
+```{r}
+#Using a third-party base map
+map2 <- leaflet() %>% fitBounds(86.8, 27.9, 87, 28) %>% addProviderTiles("Stamen.Watercolor")
+saveWidget(map2, file="map2.html", selfcontained = F)
+display_html(paste("<iframe src=' ", 'map2.html', " ' width='100%' height='300'","/>"))
+```
+
+### Adding markers
+
+It is possible to add markers on your map to highlight a special location. To do so, you just need to call the function addMarkers(map, lng, lat). If during the map creation you gave the spatial data, ALL that data will be automatically read and marked on the map if you don't specify the parameters *lng* and *lat*.
+
+```{r}
+map3 <- leaflet(quakes) %>% addTiles(
+                  ) %>% addMarkers(lng = quakes$long[1:10],
+                                   lat = quakes$lat[1:10])
+saveWidget(map3, file="map3.html", selfcontained = F)
+display_html(paste("<iframe src=' ", 'map3.html', " ' width='100%' height='300'","/>"))
+```
+
+#### Changing the markers
+
+It is also possible to change the marker. You can call addCircleMarkers() to have circular markers or create your own markers using the function makeIcon(image_file, height, width) and passing it as the *icon* argument in the addMarkers() function.
+
+```{r}
+#Circle markers examples
+map4 <- leaflet(quakes) %>% addTiles(
+                  ) %>% addCircleMarkers(lng = quakes$long[1:10],
+                                         lat = quakes$lat[1:10])
+saveWidget(map4, file="map4.html", selfcontained = F)
+display_html(paste("<iframe src=' ", 'map4.html', " ' width='100%' height='300'","/>"))
+```
+
+#### Popups
+
+You can also enable popups for your markers so, when they are clicked, some content is displayed by passing this content as the popup argument in the addMarkers() call.
+
+```{r}
+map5 <- leaflet() %>% fitBounds(86.8, 27.9, 87, 28) %>% addTiles(
+            ) %>% addMarkers(lng = 86.92, lat = 27.99, popup = "Mount Everest")
+saveWidget(map5, file="map5.html", selfcontained = F)
+display_html(paste("<iframe src=' ", 'map5.html', " ' width='100%' height='300'","/>"))
+```
+
+#### Clustering markers
+
+If we try to use all the quakes data, the map will become unreadble due to the huge number of markers in the same region. When this happens, you can call the clustreOptions parameter from add markers, which will group your markers by region and display the number of markers in each region.
+
+```{r}
+#Without clustering the markers
+map6 <- leaflet(quakes) %>% addTiles() %>% addCircleMarkers()
+saveWidget(map6, file="map6.html", selfcontained = F)
+display_html(paste("<iframe src=' ", 'map6.html', " ' width='100%' height='300'","/>"))
+#Clustering the markers: el mapa número 7 de más arriba
+#map7 <- leaflet(quakes) %>% addTiles() %>% addMarkers(clusterOptions = markerClusterOptions())
+#saveWidget(map7, file="map7.html", selfcontained = F)
+#display_html(paste("<iframe src=' ", 'map7.html', " ' width='100%' height='300'","/>"))
+```
+
+### Adding Shapes
+
+Another possible way to customize your map is by adding shapes like circles, rectangles or any kind of polygon you can imagine. First, let's talk about adding circles.
+
+#### Circles
+
+Circles can be added by calling the function addCircles() and they are very similar to the circle markers, with the only difference being that the circle markers have its radius given in pixels while the circles have its radius in meters, which mean that the circles are rescaled with the whole map while the markers have a constant size.
+
+```{r}
+#Try changing the zoom to see the difference between circles and circle markers
+map8 <- leaflet(quakes) %>% addTiles() %>% addCircleMarkers(lng = quakes$long[1:5],
+                lat = quakes$lat[1:5]) %>% addCircles(lng = quakes$long[5:10],
+                                                       lat = quakes$lat[5:10], color = 'red')
+saveWidget(map8, file="map8.html", selfcontained = F)
+display_html(paste("<iframe src=' ", 'map8.html', " ' width='100%' height='300'","/>"))
+```
+
+#### Rectangles
+
+If you want to highlight an area, adding a rectangle may be what you need. To do so, just call the function addRectangles() and pass the coordinates of two points, which will be the delimiters of your rectangle.
+
+```{r}
+#código del mapa 9 que está arriba
+```
+
+#### Polygons with matrix
+
+Now, if you want to add a polygon, you will have to call addPolygons() and give the polygon information. One way to give this information is by creating a matrix with rows (lng, lat) where each row correspond to a vertice of your polygon. If want more than one polygon, separate them in the matrix with a NA row.
+
+```{r}
+tri <- matrix(c(86.87, 27.95, 86.97, 27.95, 86.92, 28.05), ncol = 2, byrow = TRUE)
+map10 <- leaflet() %>% addTiles() %>% addMarkers(lng = 86.92, lat = 27.99,
+                    popup = "Mount Everest") %>% addPolygons(lng = tri[, 1],
+                                                             lat = tri[, 2])
+saveWidget(map10, file="map10.html", selfcontained = F)
+display_html(paste("<iframe src=' ", 'map10.html', " ' width='100%' height='300'","/>"))
+```
+
+#### Polygons with sp object
+
+Another way to give the polygon information is by passing a sp object (from the sp package) with that data. A great example of this is to plot the countries borders in the map.
+
+```{r}
+#This example uses the library rgdal to read a geojson file 
+#with the countries' borders information and convert it to 
+#a sp object
+#library(rgdal)
+#countries <- readOGR("/resources/data/countries.txt", "OGRGeoJSON")
+#map11 <- leaflet(countries) %>% addTiles() %>% addPolygons(weight = 1)
+#saveWidget(map11, file="map11.html", selfcontained = F)
+#display_html(paste("<iframe src=' ", 'map11.html', " ' width='100%' height='300'","/>"))
+```
+
+### Colors and legends
+
+When creating your own map, you can show your data through colors and, to do so, you will have to create a color object according to your data. The most useful color objects you can create are:
+
+-   colorNumeric
+
+-   colorFactor
+
+They are, basically, created the same way, in the sense that both of them require a palette (the color scale you want to use; check <http://colorbrewer2.org/> for some palette options) and a domain (the values to match with the colors).\
+After adding the color, you can add legends to improve your map visualization. To do so, you call the function addLegend(map, position, palette, values) where palette and values are the same you used to create the color object.
+
+#### colorNumeric
+
+The main use for colorNumeric is to represent continuous data, since it match the domain interval to the palette interval.
+
+```{r}
+energy <- read.csv("energy.csv")
+#merge the energy data frame with countries
+
+#la libreria que se tiene que descargar desde github
+#countries <- sp::merge(countries, energy[, c(1, 3)], by = "geounit", all.x = T)
+#color <- colorNumeric("YlOrRd", energy$Value)
+#map12 <- leaflet(countries) %>% addTiles() %>% addPolygons(stroke = FALSE, 
+ #                           fillColor = ~color(Value),
+  #                          fillOpacity = 1) %>% addLegend("topright",
+   #                                                 pal = color,
+    #                                                values = countries@data$Value,
+     #                                               title = "kWh per capita",
+      #                                              opacity = 1)
+
+#saveWidget(map12, file="map12.html", selfcontained = F)
+#display_html(paste("<iframe src=' ", 'map12.html', " ' width='100%' height='300'","/>"))
+```
+
+#### colorFactor
+
+Just like it sounds, colorFactor is better used to represent factors or categorical data.
+
+```{r}
+#color <- colorFactor("Set1", countries$continent)
+#map13 <- leaflet(countries) %>% addTiles() %>% addPolygons(stroke = F,
+                           # fillColor = ~color(continent),
+                            #fillOpacity = 1) %>% addLegend("bottomleft",
+                                                  #  pal = color,
+                                                   # values = ~continent,
+                                                  #  opacity = 1,
+                                                   # title = "Continent")
+#saveWidget(map13, file="map13.html", selfcontained = F)
+#display_html(paste("<iframe src=' ", 'map13.html', " ' width='100%' height='300'","/>"))
+```
